@@ -1,6 +1,6 @@
 # pre-symphony 需求总纲
 
-Last updated: 2026-05-28 · Status: DRAFT(待评审)
+Last updated: 2026-05-28 · Status: DRAFT(核心决策已定,见 §9.A)
 
 ---
 
@@ -69,12 +69,12 @@ PLAN 被建模为一张有向无环图。**节点 = 一个原子工作项 = 一�
 | G1 | **节点(原子工作项)** | 一个 PR 能装下的最小独立改动 | 一个 Linear issue |
 | G2 | **依赖边** | 区分硬依赖 vs 软关联 | `blocks`/`blockedBy`(硬)、`related`(软) |
 | G3 | **决策节点** | 其产出(结果分档)决定下游走哪条分支 | 见 §9 开放问题(Symphony 无条件分支,需特殊处理) |
-| G4 | **阶段标志 / 里程碑** | 把节点分成波次(M0 sanity → M1 → M2 …) | Linear **milestone**(`linear milestone create`) |
+| G4 | **阶段标志 / 里程碑** | 把节点分成波次(M0 sanity → M1 → M2 …)。**milestone 是本地完整 DAG 里的一等概念**——因为只推送活跃前沿,Linear 只看得到被推的节点,所以阶段不能只活在 Linear 里;推送时把本地 milestone 投影成对应的 Linear milestone | 本地:graph 节点的 `milestone` 字段(全量);Linear:`linear milestone create`(仅活跃前沿) |
 | G5 | **验收标准(Acceptance Criteria)** | 每节点「做完」的客观判据 | 写进 issue 描述;Symphony 镜像进 workpad 作硬性门 |
 | G6 | **验证 / 测试计划(Validation/Test Plan)** | 可执行的验证命令/步骤 | 写进 issue 描述;Symphony 视为不可降级的验收输入 |
 | G7 | **初始状态** | DAG 根(无未满足依赖)→ `Todo`;其余 → `Backlog` | issue 初始 state(Symphony 只自动启 active 状态) |
 | G8 | **来源可追溯(provenance)** | 节点回链它实现的 SPEC 章节/claim | issue 描述里的 SPEC 锚点 + 隐藏标记行 |
-| G9 | **幂等键(stable id)** | 节点稳定 id,保证重跑不产生重复 issue | 描述里 `<!-- pre-symphony:node=<id> -->` + 本地映射文件 |
+| G9 | **幂等键(自动 hash)** | 节点 id **由内容自动 hash 生成,不要求 LLM 显式写**(减少幻觉/误差);保证重跑不产生重复 issue。权衡:hash 只覆盖**稳定子集**(如 SPEC 锚点 + 节点角色),避免正文小改就被当成新 issue | 描述里 `<!-- pre-symphony:node=<hash> -->` + 本地 `state/linear_map.json` |
 | G10 | **优先级 / 预估成本** | 排序与并发预算(Symphony 有 `max_concurrent_agents`) | Linear `priority`;成本用于波次规划 |
 | G11 | **标签** | 让 Symphony 选中并归类 | label `symphony` + 自定义标签 |
 | G12 | **范围契约(touch scope)** | 节点声明它大致动哪些文件/模块,用于校验「一个 PR」假设并提示拆分 | 用于 G1 粒度校验,不一定进 issue |
@@ -86,6 +86,14 @@ PLAN 被建模为一张有向无环图。**节点 = 一个原子工作项 = 一�
 - **必填字段**:每个非决策节点必须有 验收标准(G5)+ 验证(G6),否则不允许推送。
 - **回滚一致性**:每个节点应对应一个连贯可独立 revert 的改动。
 
+### 5.3 完整图 vs 活跃前沿(推送策略,已决策)
+
+完整 DAG(含所有决策分支)**只存在本地**(pre-symphony 这边),作为规划、可视化、追踪与回滚的全局视图——「完整图在我这里」。**只有当前可执行的「活跃前沿」节点被推送到 Linear**(执行边进入 Symphony)。
+
+- **决策节点**作为人工门 issue;它完成、人工选定结果分档后,**重跑 pre-symphony**,把被选中分支的下一段前沿推上去,**未选分支永不创建**。
+- 好处:Symphony 模型干净(无需条件分支)、不创建会被取消的投机 issue、全局图在本地便于追踪/回滚。
+- 推论:见 G4 —— milestone 必须是本地完整 DAG 的一等概念,Linear milestone 只是其活跃部分的投影。
+
 ---
 
 ## 6. 功能需求(FR)
@@ -95,8 +103,8 @@ PLAN 被建模为一张有向无环图。**节点 = 一个原子工作项 = 一�
 | **FR1** | 定义并解析 **PLAN 输入契约**(markdown + 可选 front-matter / 结构化块) | 上游 agent 按此格式产出 PLAN;契约要稳定、对 LLM 友好 |
 | **FR2** | 由 PLAN 构造 **PLAN DAG**(§5),落成 `plan_graph.json` | 图是中心产物,后续步骤都基于它 |
 | **FR3** | **校验 DAG**(§5.2:无环、完整、粒度、必填字段) | 不合规则阻断推送并给出可行动报错 |
-| **FR4** | **决策节点建模**(见 §9 推荐方案) | Symphony 无条件分支,需显式策略 |
-| **FR5** | **阶段/里程碑 + 初始状态计算**(波次、Todo vs Backlog) | 拓扑排序得波次;DAG 根 → Todo |
+| **FR4** | **决策节点建模 + 活跃前沿推送**(§5.3:完整图本地、只推前沿;决策为人工门,选定后重跑展开被选分支) | 已决策 §9.A.1;Symphony 无条件分支 |
+| **FR5** | **阶段/里程碑 + 初始状态计算**(波次、Todo vs Backlog)。本地维护完整 milestone,推送时为活跃前沿创建/同步 Linear milestone | 拓扑排序得波次;DAG 根 → Todo;milestone 本地一等、Linear 为投影 |
 | **FR6** | **合成 Symphony 友好 issue**(title / 描述含 AC+Validation+provenance / labels / priority / milestone / 关系 / 初始 state) | 严格对齐 Symphony issue schema(`SPEC.md §4.1.1`) |
 | **FR7** | **dry-run 预览 + 可视化**(导出 `issues.json` + Mermaid/Graphviz 图),**人工确认门** | 对外写之前必须有人看一眼;呼应「降低认知负担 + GUI 辅助」 |
 | **FR8** | **幂等推送 / reconcile** 到 Linear(create/update/skip,稳定 id 防重复),维护 `state/linear_map.json` | 这是纯 markdown 规范做不到、必须用代码的核心价值 |
@@ -133,17 +141,20 @@ PLAN 被建模为一张有向无环图。**节点 = 一个原子工作项 = 一�
 
 ---
 
-## 9. 开放问题 / 待决策
+## 9. 决策记录 / 开放问题
 
-1. **决策节点怎么落地(最关键)**。Symphony 无条件分支能力。推荐方案(待确认):
-   - **只推送活跃前沿**:DAG 完整建模整棵树(用于规划+可视化),但**只把当前可执行的前沿节点推到 Linear**。决策节点本身作为**人工门** issue;它完成后,**重跑 pre-symphony** 展开被选中的分支,未选分支永不创建。
-   - 好处:Symphony 模型干净、不创建会被取消的投机 issue、契合「可回滚/不浪费」精神。
-   - 备选:一次性把所有分支建成 `Backlog` 且 `blockedBy` 决策节点,事后人工把选中分支移到 `Todo`、取消其余(会产生需清理的 issue)。
-2. **阶段标志映射**:Linear **milestone**(推荐)还是 label?milestone 更语义化但需 project 维度。
-3. **幂等键策略**:节点 id 用「SPEC 锚点 + 标题 hash」自动生成,还是要求 PLAN 显式写 `id:`?推荐:显式优先、缺省回退到 hash。
+### 9.A 已决策(2026-05-28)
+
+1. **决策节点落地** ✅ 完整 DAG 只在本地建模(规划/可视化/全局追踪与回滚);**只推送活跃前沿到 Linear**,执行边进入 Symphony。决策节点为人工门,人工选定结果后**重跑 pre-symphony** 展开被选分支,未选分支不创建。详见 §5.3。
+2. **阶段标志映射** ✅ 用 Linear **milestone**。**注意**:因「只推前沿」,milestone 必须先是本地完整 DAG 的一等概念,Linear milestone 只是其活跃部分的投影(见 G4 / FR5)。
+3. **幂等键** ✅ **自动 hash 生成**(不要求 PLAN 写显式 `id:`),以减少 LLM 幻觉/误差。权衡与缓解:hash 只覆盖稳定子集(SPEC 锚点 + 节点角色),避免正文小改就被识别成新 issue(见 G9)。
+
+### 9.B 仍开放
+
 4. **是否把 SPEC/PLAN 作为 Linear document 一并上传**(增强可追溯,但增加写操作)。
 5. **多 Agent 并行(后续)**:当前先单 Agent 串行产出;未来波次内的独立节点可并行执行(由 Symphony 的 `max_concurrent_agents` 承接),pre-symphony 侧需保证波次/依赖正确。
-6. **是否绑定 Linear**:已默认绑定(submodule 即为证)。若未来要脱离 Linear,需为 Symphony 写非 Linear tracker adapter——不在本项目范围。
+
+> Linear 绑定:已默认绑定(submodule 即为证),不再列为开放问题。
 
 ---
 

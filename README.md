@@ -19,7 +19,7 @@ claude-code (SPEC+PLAN) ─▶ pre-symphony (this) ─▶ Linear ─▶ Symphony
 ## Status
 
 Pre-implementation. Requirements are being defined first — see
-[`DOCs/PDR/`](DOCs/PDR/20260528-pre-symphony-requirements.md).
+[`DOCs/PRD/`](DOCs/PRD/20260528-pre-symphony-requirements.md).
 
 ## Components
 
