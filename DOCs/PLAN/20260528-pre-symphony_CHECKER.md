@@ -18,23 +18,23 @@ Last updated: 2026-05-28 · 配对:[PLAN](20260528-pre-symphony_PLAN.md) · 引�
 - [x] 单元测试覆盖以上(16 passed)
 
 ## M2 合成与预览(不触网)
-- [ ] `plan_stages` 正确算出波次、初始状态(根→Todo)、**活跃前沿**
-- [ ] `synth_issues` 产出 `issues.json`,字段对齐 Symphony schema(title/desc 含 AC+Validation+provenance/labels/priority/milestone/关系/state)
-- [ ] `visualize` 产出 Mermaid/Graphviz 图 + dry-run 摘要
-- [ ] 人工确认门生效:未确认不进入推送
-- [ ] 冒烟测试:tiny PLAN 全流程到 `issues.json`(见 CCHECKER)
+- [x] `plan_stages` 正确算出波次、初始状态(前沿→Todo)、**活跃前沿**(决策下游排除)
+- [x] `synth_issues` 产出 `issues.json`,字段对齐 Symphony schema(title/desc 含 AC+Validation+provenance/marker、labels/priority/milestone/blockedBy/state)
+- [x] `visualize` 产出 Mermaid 图 + dry-run 摘要(Graphviz 为可选,暂未做)
+- [x] 人工确认门生效:`push` 无 `--yes` 仅本地预览、不写 Linear
+- [x] 冒烟测试:tiny PLAN 全流程到 `issues.json`(`tests/smoke/`)
 
 ## M3 推送与 Linear
-- [ ] `linear_client` 跑通:`issue create` / `milestone create` / `issue query --json`
-- [ ] DP1 结论落定:关系/state/label 用 `linear api` 还是自带 GraphQL(更新 DECISION_TREE)
-- [ ] 首次推送:建 issue + milestone + `blockedBy` 关系 + 初始 state
-- [ ] 重跑幂等:已存在节点 skip / 变更节点 update,**无重复 issue**
-- [ ] `state/linear_map.json` 正确维护(node hash → Linear identifier)
-- [ ] PLAN/SPEC document **更新式**上传:闭合段落删除,只留活跃前沿
-- [ ] 集成测试:跑到真实 Linear 测试 project(见 CCHECKER)
+- [x] `linear_client` 实现:`linear api` 原始 GraphQL(create/update/relation/milestone/document/query)—— **代码完成,实跑待 Linear creds**
+- [x] DP1 结论:统一用 `linear api` 原始 GraphQL(机制已确认;字段名待实跑校验)—— 见 DECISION_TREE
+- [x] `reconcile` 幂等逻辑:create/update/skip + marker 回收 + `linear_map.json`(单测覆盖,fake client)
+- [x] document **更新式**上传逻辑:`render_document` + upsert(单测覆盖「替换非追加」)
+- [ ] 首次推送 + `blockedBy` + 初始 state 真跑(**待 LINEAR_API_KEY/team/project**)
+- [ ] 集成测试跑到真实 Linear project(**gated;无 creds 时自动 skip**)
 
 ## M4 编排与端到端
-- [ ] `SKILL.md` 编排全流程,引擎无关(claude-code / codex)
-- [ ] 端到端:一条 SPEC → PLAN → Linear,Symphony 能 poll 到并起 workspace
-- [ ] 决策节点流程验证:完成人工门 → 重跑 → 被选分支前沿推送、未选不创建
-- [ ] 端到端记录归档(PROGRESS)
+- [x] `SKILL.md` 编排全流程,引擎无关(claude-code / codex)
+- [x] CLI 全流程 build/validate/synth/preview/push(确认门)—— 本地端到端跑通
+- [ ] 端到端真跑:SPEC → PLAN → Linear,Symphony poll 到并起 workspace(**待 creds**)
+- [ ] 决策节点流程:完成人工门 → 重跑 → 被选分支推送、未选不创建(**待真实 Linear 验证**)
+- [ ] 端到端记录归档(PROGRESS)—— 待真跑后

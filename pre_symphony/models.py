@@ -87,6 +87,45 @@ class PlanGraph:
     frontier: list[str] = field(default_factory=list)
 
 
+@dataclass
+class IssueRecord:
+    """A Symphony-friendly Linear issue, synthesized from a PlanNode.
+
+    Fields mirror what Symphony reads (SPEC §4.1.1). ``blocked_by`` holds the
+    node_ids of blockers; push_linear resolves them to Linear ids.
+    """
+
+    node_id: str
+    title: str
+    description: str
+    state: str = "Todo"
+    labels: list[str] = field(default_factory=list)
+    priority: int | None = None
+    milestone: str | None = None
+    blocked_by: list[str] = field(default_factory=list)
+
+
+@dataclass
+class LinearMap:
+    """Idempotency state (state/linear_map.json)."""
+
+    by_node: dict[str, str] = field(default_factory=dict)  # node_id -> Linear identifier
+    document_id: str | None = None
+    milestones: dict[str, str] = field(default_factory=dict)  # milestone name -> Linear id
+
+
+def linear_map_to_dict(lmap: LinearMap) -> dict:
+    return asdict(lmap)
+
+
+def linear_map_from_dict(data: dict) -> LinearMap:
+    return LinearMap(
+        by_node=data.get("by_node", {}),
+        document_id=data.get("document_id"),
+        milestones=data.get("milestones", {}),
+    )
+
+
 def graph_to_dict(graph: PlanGraph) -> dict:
     return {
         "nodes": {nid: asdict(node) for nid, node in graph.nodes.items()},

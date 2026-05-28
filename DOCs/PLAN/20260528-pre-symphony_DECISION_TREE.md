@@ -16,7 +16,7 @@ Last updated: 2026-05-28 · 关联:[PLAN](20260528-pre-symphony_PLAN.md) / [CHEC
 | 🟡 中等 | 部分能(如能 create issue 但关系/state 要拼 GraphQL,且 auth 可复用) | `linear_client` 内置一组固定 GraphQL 文档,经 `linear api` 透传执行 |
 | 🔴 悲观 | `linear api` 受限(无法透传任意 mutation 或 auth 不可复用) | 自带最小 GraphQL HTTP 客户端(`httpx` + `LINEAR_API_KEY`),linear-cli 仅用于交互/查询便利 |
 
-**决策记录**:_(待 M3 实测填写:日期 / 实测命令 / 结论 / 选档)_
+**决策记录**:2026-05-28 / 依据:linear-cli `src/commands/api.ts` 确认 `linear api '<query>' --variables-json <json>` 可执行任意 GraphQL(含 mutation),并复用 CLI auth(`LINEAR_API_KEY`/`.linear.toml`/`auth login`)/ **选档:🟢(机制已确认)** / PIVOT:全部经 `linear api`,`linear_client` 仅薄封装,不自带 GraphQL HTTP 客户端 / 影响:`pre_symphony/linear_client.py` 已按此实现。**遗留:GraphQL 字段名(IssueCreateInput 等)待真实 creds 的集成测试校验**(`tests/integration/`,gated)。
 
 ---
 
