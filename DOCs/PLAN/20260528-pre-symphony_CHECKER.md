@@ -5,17 +5,17 @@ Last updated: 2026-05-28 · 配对:[PLAN](20260528-pre-symphony_PLAN.md) · 引�
 > 完成一项勾一项,不删除已完成项。分组对应 PLAN 的里程碑。
 
 ## M0 需求与设计冻结
-- [ ] PRD 定稿(含 §9.A 全部决策)
-- [ ] PLAN 三件套就位(PLAN / CHECKER / DECISION_TREE)
-- [ ] CPLAN 三件套就位(CPLAN / CCHECKER / CDECISION_TREE)
-- [ ] 与上游约定 PLAN 输入契约草案(FR1)
+- [x] PRD 定稿(含 §9.A 全部决策)
+- [x] PLAN 三件套就位(PLAN / CHECKER / DECISION_TREE)
+- [x] CPLAN 三件套就位(CPLAN / CCHECKER / CDECISION_TREE)
+- [x] PLAN 输入契约草案(FR1)—— 实现在 `pre_symphony/parse_plan.py` docstring + `tests/fixtures/sample_plan.md`;与上游正式约定待 M4
 
 ## M1 建图与校验(纯本地)
-- [ ] `parse_plan` 能解析样例 PLAN → 中间表示
-- [ ] `build_graph` 产出 `plan_graph.json`(节点/边/决策节点/milestone 字段齐全)
-- [ ] `validate` 检出:有环 / 悬空依赖 / 缺验收标准 / 缺验证 / 粒度过大
-- [ ] 坏样例每类各有一个报错用例,报错信息可行动
-- [ ] 单元测试覆盖以上(见 CCHECKER)
+- [x] `parse_plan` 能解析样例 PLAN → 中间表示(`ParsedPlan`)
+- [x] `build_graph` 产出 `plan_graph.json`(节点/边/决策节点/milestone 字段齐全,稳定 hash id)
+- [x] `validate` 检出:有环 / 悬空依赖 / 缺验收标准 / 缺验证 / 粒度过大(warning)/ 决策缺 options
+- [x] 坏样例每类各有一个报错用例,报错信息可行动(见 `tests/unit/test_validate.py`)
+- [x] 单元测试覆盖以上(16 passed)
 
 ## M2 合成与预览(不触网)
 - [ ] `plan_stages` 正确算出波次、初始状态(根→Todo)、**活跃前沿**

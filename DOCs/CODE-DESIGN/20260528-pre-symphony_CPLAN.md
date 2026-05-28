@@ -39,6 +39,7 @@ class PlanNode:
     node_id: str            # 自动 hash(稳定子集),G9;不要求 LLM 写
     kind: NodeKind
     title: str
+    role: str               # LLM 可写的稳定句柄;依赖用 role 引用,hash 输入之一
     body: str               # 实现说明
     acceptance: list[str]   # G5 验收标准(work 节点必填)
     validation: list[str]   # G6 验证/测试命令(work 节点必填)
@@ -61,7 +62,7 @@ class PlanGraph:
     # plan_stages 标注:
     waves: dict[str, int]            # node_id → 波次序号
     initial_state: dict[str, IssueState]
-    frontier: set[str]               # 当前活跃前沿(可推送)
+    frontier: list[str]              # 当前活跃前沿(可推送;用 list 便于 JSON 序列化)
 
 @dataclass
 class IssueRecord:               # synth_issues 输出,对齐 Symphony schema
