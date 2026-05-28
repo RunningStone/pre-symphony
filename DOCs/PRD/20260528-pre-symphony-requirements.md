@@ -110,6 +110,7 @@ PLAN 被建模为一张有向无环图。**节点 = 一个原子工作项 = 一�
 | **FR8** | **幂等推送 / reconcile** 到 Linear(create/update/skip,稳定 id 防重复),维护 `state/linear_map.json` | 这是纯 markdown 规范做不到、必须用代码的核心价值 |
 | **FR9** | **Linear 访问层** 经 `schpet/linear-cli`(submodule);CLI 不覆盖的(关系/state/label)走 `linear api` 原始 GraphQL | 见 §8 能力映射;全程不用 MCP |
 | **FR10** | **可追溯**:每个 issue 能回链到 SPEC 的章节/claim | 审计 + rebuttal + 复盘 |
+| **FR11** | **上传当前 PLAN/SPEC 为 Linear document(更新式)**:只反映当前活跃步骤;已闭合段落删除;维护单个 document 随前沿更新/替换,**不累积** | 已决策 §9.A.4 |
 
 ---
 
@@ -148,11 +149,11 @@ PLAN 被建模为一张有向无环图。**节点 = 一个原子工作项 = 一�
 1. **决策节点落地** ✅ 完整 DAG 只在本地建模(规划/可视化/全局追踪与回滚);**只推送活跃前沿到 Linear**,执行边进入 Symphony。决策节点为人工门,人工选定结果后**重跑 pre-symphony** 展开被选分支,未选分支不创建。详见 §5.3。
 2. **阶段标志映射** ✅ 用 Linear **milestone**。**注意**:因「只推前沿」,milestone 必须先是本地完整 DAG 的一等概念,Linear milestone 只是其活跃部分的投影(见 G4 / FR5)。
 3. **幂等键** ✅ **自动 hash 生成**(不要求 PLAN 写显式 `id:`),以减少 LLM 幻觉/误差。权衡与缓解:hash 只覆盖稳定子集(SPEC 锚点 + 节点角色),避免正文小改就被识别成新 issue(见 G9)。
+4. **SPEC/PLAN 上传为 Linear document** ✅ 要上传,但**只上传当前活跃步骤对应的内容**;之前已闭合的 PLAN 段落要删除 —— 因此是**更新式(update)上传**:维护单个 document(随当前里程碑/前沿),随活跃前沿推进而更新/替换其内容,而非不断追加(见 FR11)。
 
 ### 9.B 仍开放
 
-4. **是否把 SPEC/PLAN 作为 Linear document 一并上传**(增强可追溯,但增加写操作)。
-5. **多 Agent 并行(后续)**:当前先单 Agent 串行产出;未来波次内的独立节点可并行执行(由 Symphony 的 `max_concurrent_agents` 承接),pre-symphony 侧需保证波次/依赖正确。
+5. **多 Agent 并行**:**暂不考虑,后续再做**。当前单 Agent 串行产出活跃前沿;未来波次内独立节点可并行(由 Symphony `max_concurrent_agents` 承接),届时 pre-symphony 侧需保证波次/依赖正确。
 
 > Linear 绑定:已默认绑定(submodule 即为证),不再列为开放问题。
 
@@ -173,7 +174,7 @@ pre-symphony/
 │   └── push_linear.py       # FR8/FR9: 经 linear-cli 幂等 reconcile
 ├── vendor/linear-cli/       # submodule: Linear 访问(CLI + 原始 GraphQL)
 ├── state/linear_map.json    # 幂等映射:node id → Linear issue identifier
-└── DOCs/PDR/                # 本需求文档
+└── DOCs/PRD/                # 本需求文档
 ```
 
 **核心产物链**:`PLAN.md → plan_graph.json →(校验)→ issues.json →(人工确认)→ Linear`。
