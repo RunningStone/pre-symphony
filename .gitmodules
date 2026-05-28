@@ -1,0 +1,3 @@
+[submodule "vendor/linear-cli"]
+	path = vendor/linear-cli
+	url = https://github.com/schpet/linear-cli.git

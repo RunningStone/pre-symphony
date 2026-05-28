@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local runtime artifacts (keep state/linear_map.json tracked when it exists)
+*.log
+.DS_Store
+
+# Secrets
+.env
